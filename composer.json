@@ -1,0 +1,23 @@
+{
+    "name": "kolgaev/vk-parser",
+    "description": "VK archive parser",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Kolgaev\\VkParser\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Dmitriy Kolgaev",
+            "email": "kolgaev@gmail.com"
+        }
+    ],
+    "require": {
+        "illuminate/database": "^10.39",
+        "symfony/console": "^6.4",
+        "symfony/var-dumper": "^6.4",
+        "phpoption/phpoption": "^1.9",
+        "vlucas/phpdotenv": "^5.6"
+    }
+}
