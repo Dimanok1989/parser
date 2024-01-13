@@ -1,10 +1,11 @@
 {
-    "name": "kolgaev/vk-parser",
-    "description": "VK archive parser",
+    "name": "kolgaev/parser",
+    "description": "VK and Telegram archive parser",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Kolgaev\\VkParser\\": "src/"
+            "Kolgaev\\Parser\\": "src/",
+            "Kolgaev\\Parser\\DB\\": "database/"
         }
     },
     "authors": [

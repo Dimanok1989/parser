@@ -1,10 +1,10 @@
 <?php
 
-namespace Kolgaev\VkParser\Models;
+namespace Kolgaev\Parser\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class VkMessage extends Model
+class MessageAttachment extends Model
 {
     /**
      * Поля для массового заполнения
@@ -12,10 +12,11 @@ class VkMessage extends Model
      * @var array
      */
     protected $fillable = [
-        'chat_id',
         'message_id',
-        'user_name',
-        'message',
-        'created_at',
+        'hash',
+        'type',
+        'mime_type',
+        'path',
+        'content',
     ];
 }

@@ -1,13 +1,22 @@
 <?php
 
 use Dotenv\Dotenv;
-use Kolgaev\VkParser\Database;
+use Kolgaev\Parser\DB\Database;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/helper.php';
 
-$dotenv = Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+try {
+    $dotenv = Dotenv::createImmutable(__DIR__);
+    $dotenv->load();
 
-$database = new Database();
+    $database = new Database();
+    $database->migration();
+} catch (Exception $e) {
+    $output = new ConsoleOutput();
+    $output->writeln("<fg=red>" . $e->getMessage() . "</>");
+    exit;
+}
 
-(new Kolgaev\VkParser\Parser)();
+(new Kolgaev\Parser\Parser)();

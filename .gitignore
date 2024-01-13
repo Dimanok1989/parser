@@ -1,3 +1,5 @@
 /archive/*
+/archive-vk/*
+/archive-telegram/*
 /vendor/
 .env
