@@ -269,7 +269,7 @@ class Messages implements ArchivePartInterface, ParserInterface
                 $messages[] = [
                     'chat_id' => $contact['chatId'],
                     'message_id' => $messageId ?? null,
-                    'user_name' => $name ?? null,
+                    'from_name' => $name ?? null,
                     'message' => $message ?? null,
                     'created_at' => $createdAt ?? null,
                 ];
