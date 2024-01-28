@@ -1,10 +1,37 @@
 ## Установка
 
+#### GitHub
+
 ```
+git clone https://github.com/Dimanok1989/parser.git
+cd parser
 composer install
 ```
 
+#### Packagist
+
+Для установки как отдельный проект
+```
+composer create-project kolgaev/parser parser
+```
+или для установки пакета в собственный проект
+```
+composer require kolgaev/parser
+```
+
 ## Настройка
+
+#### Конфиг
+
+Создать файл `.env` и заполнить его по аналогии с `.env.example`
+
+Поддерживаются следующие драйвера базы данных:
+- `mysql`
+- `pgsql`
+
+Можно указать полный путь до каталога с архивами
+`ARCHIVE_VK=`
+`ARCHIVE_TELEGRAM=`
 
 #### Распаковка архива
 
@@ -49,12 +76,6 @@ archive-vk
 └── style.css
 
 ```
-
-#### База данных
-
-Поддерживаются следующие драйвера базы данных:
-- `mysql`
-- `pgsql`
 
 ## Запуск
 

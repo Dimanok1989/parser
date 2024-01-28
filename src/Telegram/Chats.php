@@ -81,7 +81,7 @@ class Chats implements ArchivePartInterface, ParserInterface
     {
         $this->args = collect($_SERVER['argv'] ?? []);
 
-        $this->dir = $this->parser->dir . "/" . self::DIR;
+        $this->dir = env('ARCHIVE_TELEGRAM', $this->parser->dir) . "/" . self::DIR;
         $this->index = $this->parser->dir . "/lists/chats.html";
 
         if (!file_exists($this->index)) {

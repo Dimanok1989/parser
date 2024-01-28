@@ -49,6 +49,20 @@ class Messages implements ArchivePartInterface, ParserInterface
     protected $count = 0;
 
     /**
+     * Счетчик созданных сообщений
+     * 
+     * @var int
+     */
+    protected $countMessageCreated = 0;
+
+    /**
+     * Счетчик обновленных сообщений
+     * 
+     * @var int
+     */
+    protected $countMessageUpdated = 0;
+
+    /**
      * Страницы с данными
      * 
      * @var \Illuminate\Support\Collection
@@ -79,7 +93,7 @@ class Messages implements ArchivePartInterface, ParserInterface
     {
         $this->args = collect($_SERVER['argv'] ?? []);
 
-        $this->dir = $this->parser->dir . "/" . self::DIR;
+        $this->dir = env('ARCHIVE_VK', $this->parser->dir) . "/" . self::DIR;
         $this->index = $this->dir . "/index-messages.html";
 
         if (!file_exists($this->index)) {
@@ -165,7 +179,7 @@ class Messages implements ArchivePartInterface, ParserInterface
             $keys = collect($this->contacts)->keys();
             $keyString = $keys->min() . "-" . $keys->max();
 
-            while (!$item) {
+            while ($item === null) {
                 $this->parser->write("Выберите идентификатор пользователя [$keyString]: ");
                 $line_host = trim(fgets(STDIN));
                 $item = (int) $line_host;
@@ -212,10 +226,22 @@ class Messages implements ArchivePartInterface, ParserInterface
 
             $this->parser->info("\nЗапись в базу данных:");
 
-            $contact['path'] = $this->pages->firstWhere('page', 1)['href']
-                ?? $contact['chatId'] . "/messages0.html";
+            $this->pages
+                ->sortByDesc('page')
+                ->values()
+                ->each(function ($page) use ($contact) {
 
-            $this->getMessages($contact);
+                    $contact['path'] = $page['href']
+                        ?? $contact['chatId'] . "/messages0.html";
+
+                    // dump($contact);
+                    $this->getMessages($contact);
+                });
+
+            $this->parser->line("\n");
+            $this->parser->line("<fg=green>Создано сообщений</>: <options=bold>{$this->countMessageCreated}</>");
+            $this->parser->line("<fg=yellow>Обновлено сообщений</>: <options=bold>{$this->countMessageUpdated}</>");
+            $this->parser->line("");
         }
     }
 
@@ -237,8 +263,11 @@ class Messages implements ArchivePartInterface, ParserInterface
 
         foreach ($items as $item) {
 
+            if ($item->getAttribute('class') !== "item") {
+                continue;
+            }
+
             $messageId = null;
-            $date = null;
 
             if ($message = $xpath->query('.//div[contains(@class, "message")]', $item)) {
                 $messageId = (int) $message->item(0)->getAttribute('data-id');
@@ -278,6 +307,17 @@ class Messages implements ArchivePartInterface, ParserInterface
             $this->count++;
         }
 
+        $this->parser->write(".");
+
+        if (!empty($contact['write'])) {
+
+            collect($messages ?? [])
+                ->sortBy('created_at')
+                ->each(fn ($data) => $this->createMessage($data));
+
+            return;
+        }
+
         if ($pagination = $xpath->query('//div[contains(@class, "pagination")]')) {
             foreach ($pagination as $page) {
                 $links = $xpath->query('.//a', $page);
@@ -298,18 +338,7 @@ class Messages implements ArchivePartInterface, ParserInterface
             ->sortBy('page')
             ->values();
 
-        if (!empty($contact['write'])) {
-
-            $messages = collect($messages ?? [])
-                ->sortBy('created_at')
-                ->each(fn ($data) => $this->createMessage($data));
-
-            $this->page--;
-        } else {
-            $this->page++;
-        }
-
-        $this->parser->write(".");
+        $this->page++;
 
         if ($currentPage = $this->pages->firstWhere('page', $this->page)) {
             $contact['path'] = $currentPage['href'];
@@ -332,9 +361,16 @@ class Messages implements ArchivePartInterface, ParserInterface
         ]);
 
         $message->fill($data);
+
+        if ($message->id) {
+            $this->countMessageUpdated++;
+        } else {
+            $this->countMessageCreated++;
+        }
+
         $message->save();
 
-        return $message->refresh();
+        return $message;
     }
 
     /**
@@ -348,7 +384,9 @@ class Messages implements ArchivePartInterface, ParserInterface
         $date = null;
 
         $string = Str::lower($string);
-        $string = Str::replace(["в ", "at ", "on "], "", $string);
+        $string = Str::replace(["в ", "at ", "on ", "(edited)"], "", $string);
+        $array = explode("(", $string);
+        $string = trim($array[0] ?? $string);
 
         $months = [
             " янв ",
