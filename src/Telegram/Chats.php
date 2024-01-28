@@ -85,7 +85,7 @@ class Chats implements ArchivePartInterface, ParserInterface
         $this->index = $this->parser->dir . "/lists/chats.html";
 
         if (!file_exists($this->index)) {
-            throw new Exception("File index-messages.html not found");
+            throw new Exception("File {$this->index} not found");
         }
     }
 

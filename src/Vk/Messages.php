@@ -83,7 +83,7 @@ class Messages implements ArchivePartInterface, ParserInterface
         $this->index = $this->dir . "/index-messages.html";
 
         if (!file_exists($this->index)) {
-            throw new Exception("File index-messages.html not found");
+            throw new Exception("File {$this->index} not found");
         }
     }
 
@@ -199,7 +199,7 @@ class Messages implements ArchivePartInterface, ParserInterface
             $write = $line_update;
         }
 
-        if (in_array($line_update, ['y', 'Y', 'д', 'Д'])) {
+        if (in_array($write, ['y', 'Y', 'д', 'Д'])) {
             $contact['write'] = true;
             $write = true;
         } else {
@@ -238,6 +238,7 @@ class Messages implements ArchivePartInterface, ParserInterface
         foreach ($items as $item) {
 
             $messageId = null;
+            $date = null;
 
             if ($message = $xpath->query('.//div[contains(@class, "message")]', $item)) {
                 $messageId = (int) $message->item(0)->getAttribute('data-id');
@@ -253,12 +254,7 @@ class Messages implements ArchivePartInterface, ParserInterface
                 }
 
                 if (!empty($createdAt)) {
-                    $createdAt = str_replace(" в ", " ", $createdAt);
-                    $date = explode(" ", $createdAt);
-                    $createdAt = $date[2]
-                        . "-" . month($date[1])
-                        . "-" . $date[0]
-                        . " " . $date[3];
+                    $createdAt = $this->getDate($createdAt);
                 }
 
                 if ($content = $xpath->query('.//div[contains(@class, "message")]', $item)) {
@@ -275,7 +271,7 @@ class Messages implements ArchivePartInterface, ParserInterface
                     'message_id' => $messageId ?? null,
                     'user_name' => $name ?? null,
                     'message' => $message ?? null,
-                    'created_at' => $createdAt ? Carbon::parse($createdAt) : null,
+                    'created_at' => $createdAt ?? null,
                 ];
             }
 
@@ -339,5 +335,64 @@ class Messages implements ArchivePartInterface, ParserInterface
         $message->save();
 
         return $message->refresh();
+    }
+
+    /**
+     * Парсинг даты
+     * 
+     * @param string $string
+     * @return \Carbon\Carbon|null
+     */
+    public function getDate($string)
+    {
+        $date = null;
+
+        $string = Str::lower($string);
+        $string = Str::replace(["в ", "at ", "on "], "", $string);
+
+        $months = [
+            " янв ",
+            " фев ",
+            " мар ",
+            " апр ",
+            " мая ",
+            " июн ",
+            " июл ",
+            " авг ",
+            " сен ",
+            " окт ",
+            " ноя ",
+            " дек ",
+        ];
+        $replace = [
+            "-1-",
+            "-2-",
+            "-3-",
+            "-4-",
+            "-5-",
+            "-6-",
+            "-7-",
+            "-8-",
+            "-9-",
+            "-10-",
+            "-11-",
+            "-12-"
+        ];
+
+        $string = Str::replace($months, $replace, $string);
+
+        try {
+            $date = Carbon::createFromFormat("h:i:s A d M Y", $string);
+        } catch (Exception $e) {
+        }
+
+        if (!$date) {
+            try {
+                $date = Carbon::createFromFormat("d-m-Y H:i:s", $string);
+            } catch (Exception $e) {
+            }
+        }
+
+        return $date;
     }
 }
